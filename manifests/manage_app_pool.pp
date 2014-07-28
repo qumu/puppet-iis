@@ -1,5 +1,5 @@
 #
-define iis::manage_app_pool($app_pool_name = $title, $enable_32_bit = false, $managed_runtime_version = 'v4.0', $managed_pipeline_mode = 'Integrated', $ensure = 'present') {
+define iis::manage_app_pool($app_pool_name = $title, $enable_32_bit = false, $managed_runtime_version = 'v4.0', $managed_pipeline_mode = 'Integrated', $ensure = 'present', $queue_length = '1000') {
 
   validate_bool($enable_32_bit)
   validate_re($managed_runtime_version, ['^(v2\.0|v4\.0)$'])
@@ -40,6 +40,14 @@ define iis::manage_app_pool($app_pool_name = $title, $enable_32_bit = false, $ma
       command   => "Import-Module WebAdministration; Set-ItemProperty \"IIS:\\AppPools\\${app_pool_name}\" managedPipelineMode ${managed_pipeline_mode_value}",
       provider  => powershell,
       onlyif    => "Import-Module WebAdministration; if((Get-ItemProperty \"IIS:\\AppPools\\${app_pool_name}\" managedPipelineMode).CompareTo('${managed_pipeline_mode}') -eq 0) { exit 1 } else { exit 0 }",
+      require   => Exec["Create-${app_pool_name}"],
+      logoutput => true,
+    }
+
+    exec { "ManagedPipelineMode-${queue_length}" :
+      path      => "${iis::param::powershell::path};${::path}",
+      command   => "${iis::param::powershell::command} -Command \"Import-Module WebAdministration; Set-ItemProperty \\\"IIS:\\AppPools\\${app_pool_name}\\\" -Name queueLength -Value $queue_length",
+      onlyif    => "${iis::param::powershell::command} -Command \"Import-Module WebAdministration; if((Get-Item \\\"IIS:\\AppPools\\${app_pool_name}\\\").queueLength -eq $queue_length) { exit 1 } else { exit 0 }\"",
       require   => Exec["Create-${app_pool_name}"],
       logoutput => true,
     }
