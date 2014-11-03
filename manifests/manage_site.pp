@@ -7,7 +7,8 @@ define iis::manage_site(
   $host_header = '',
   $ip_address  = '*',
   $port        = '80',
-  $ssl         = 'false'
+  $ssl         = 'false',
+  $log_dir     = '%SystemDrive%\\inetpub\\logs\\LogFiles'
   ) {
   validate_re($ensure, '^(present|installed|absent|purged)$', 'ensure must be one of \'present\', \'installed\', \'absent\', \'purged\'')
   validate_re($ssl, '^(false|true)$', 'ssl must be \'true\' or \'false\'')
@@ -55,6 +56,15 @@ define iis::manage_site(
       logoutput => true,
       before    => Exec["CreateSite-${site_name}"],
     }
+
+    exec { "UpdateSite-LogDirectory-${site_name}":
+      command   => "Import-Module WebAdministration; Set-ItemProperty \"IIS:\\Sites\\${site_name}\" -Name logfile.directory -Value \"${log_dir}\"",
+      onlyif    => "Import-Module WebAdministration; if((${$cmdSiteExists}) -eq \$false) { exit 1 } if((Get-ItemProperty \"IIS:\\Sites\\${site_name}\" logfile.directory).value -eq \"${log_dir}\") { exit 1 } else { exit 0 }",
+      provider  => 'powershell',
+      logoutput => true,
+      before    => Exec["CreateSite-${site_name}"],
+    }
+
   } else {
     exec { "DeleteSite-${site_name}" :
       command   => "Import-Module WebAdministration; Remove-WebSite -Name \"${site_name}\"",
@@ -65,3 +75,4 @@ define iis::manage_site(
     }
   }
 }
+
