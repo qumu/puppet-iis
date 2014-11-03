@@ -45,9 +45,9 @@ define iis::manage_app_pool($app_pool_name = $title, $enable_32_bit = false, $ma
     }
 
     exec { "ManagedPipelineMode-${queue_length}" :
-      path      => "${iis::param::powershell::path};${::path}",
-      command   => "${iis::param::powershell::command} -Command \"Import-Module WebAdministration; Set-ItemProperty \\\"IIS:\\AppPools\\${app_pool_name}\\\" -Name queueLength -Value $queue_length",
-      onlyif    => "${iis::param::powershell::command} -Command \"Import-Module WebAdministration; if((Get-Item \\\"IIS:\\AppPools\\${app_pool_name}\\\").queueLength -eq $queue_length) { exit 1 } else { exit 0 }\"",
+      command   => "Import-Module WebAdministration; Set-ItemProperty \"IIS:\\AppPools\\${app_pool_name}\" -Name queueLength -Value ${queue_length}",
+      onlyif    => "Import-Module WebAdministration; if((Get-Item \"IIS:\\AppPools\\${app_pool_name}\").queueLength -eq ${queue_length}) { exit 1 } else { exit 0 }",
+      provider  => powershell,
       require   => Exec["Create-${app_pool_name}"],
       logoutput => true,
     }
