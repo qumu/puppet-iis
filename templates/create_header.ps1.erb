@@ -1,9 +1,17 @@
-$site_name = "<%= @site_name %>";
-$name = "<%= @header_name %>";
-$value = "<%= @header_value %>";
+Param(
+  $site_name = "<%= @site_name %>",
+  $name = "<%= @header_name %>",
+  $value = "<%= @header_value %>"
+)
 
-Import-Module WebAdministration;
+[System.Reflection.Assembly]::LoadWithPartialName("Microsoft.Web.Administration") | Out-Null
+$iis = new-object Microsoft.Web.Administration.ServerManager
+$config = $iis.GetWebConfiguration($site_name)
+$httpProtocolSection = $config.GetSection("system.webServer/httpProtocol")
+$customHeadersCollection = $httpProtocolSection.GetCollection("customHeaders")
 
-Add-WebConfigurationProperty -PSPath "MACHINE/WEBROOT/APPHOST/$site_name" `
-  -Name . -Filter system.webServer/httpProtocol/customHeaders `
-  -AtElement @{name = "$name" ; value="$value"};
+$addElement = $customHeadersCollection.CreateElement("add")
+$addElement["name"] = "$name"
+$addElement["value"] = "$value"
+$customHeadersCollection.Add($addElement)
+$iis.CommitChanges()
