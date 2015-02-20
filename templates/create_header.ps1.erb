@@ -1,0 +1,9 @@
+$site_name = "<%= @site_name %>";
+$name = "<%= @header_name %>";
+$value = "<%= @header_value %>";
+
+Import-Module WebAdministration;
+
+Add-WebConfigurationProperty -PSPath "MACHINE/WEBROOT/APPHOST/$site_name" `
+  -Name . -Filter system.webServer/httpProtocol/customHeaders `
+  -AtElement @{name = "$name" ; value="$value"};

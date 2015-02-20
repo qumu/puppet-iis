@@ -1,0 +1,28 @@
+Param(
+  $site_name = "<%= @site_name %>",
+  $name = "<%= @header_name %>",
+  $value = "<%= @header_value %>"
+)
+
+[System.Reflection.Assembly]::LoadWithPartialName("Microsoft.Web.Administration") | Out-Null
+$iis = new-object Microsoft.Web.Administration.ServerManager
+$config = $iis.GetWebConfiguration($site_name)
+$httpProtocolSection = $config.GetSection("system.webServer/httpProtocol")
+$customHeadersCollection = $httpProtocolSection.GetCollection("customHeaders")
+
+# If header exists, get the hash index
+$getHeaderHash = $customHeadersCollection.GetEnumerator().RawAttributes
+$headerCount = $customHeadersCollection.GetEnumerator().RawAttributes.Count
+
+for ($i = $headerCount-1; $i -ge 0; $i--){
+  if($getHeaderHash.name[$i] -eq $name){
+      $headerIndex = $i
+  }
+}
+
+$customHeadersCollection.RemoveAt($headerIndex)
+$addElement = $customHeadersCollection.CreateElement("add")
+$addElement["name"] = "$name"
+$addElement["value"] = "$value"
+$customHeadersCollection.Add($addElement)
+$iis.CommitChanges()

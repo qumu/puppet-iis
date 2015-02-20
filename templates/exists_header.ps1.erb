@@ -1,0 +1,8 @@
+Import-Module WebAdministration;
+
+$count = Get-WebConfigurationProperty -PSPath "MACHINE/WEBROOT/APPHOST/<%= @site_name %>" `
+    -Filter system.webServer/httpProtocol/customHeaders -Name .  `
+       | WHERE {  $_.Collection | WHERE { $_.name -eq  "<%= @header_name %>" }  } | measure;
+
+exit $count.count
+

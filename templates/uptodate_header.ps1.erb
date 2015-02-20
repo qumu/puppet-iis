@@ -1,0 +1,12 @@
+$site_name = '<%= @site_name %>';
+$name = '<%= @header_name %>';
+$value = '<%= @header_value %>';
+
+Import-Module WebAdministration;
+
+$count = Get-WebConfigurationProperty -PSPath "MACHINE/WEBROOT/APPHOST/$site_name" `
+    -Filter system.webServer/httpProtocol/customHeaders -Name .  `
+    | WHERE {  $_.Collection | WHERE { ($_.name -eq  $name) -and ($_.value -eq $value) } } `
+    | measure;
+
+exit $count.count;
