@@ -1,4 +1,4 @@
-define iis::manage_virtual_directory($site_name, $directory, $path) {
+define iis::manage_virtual_directory($site_name, $directory=$title, $path) {
 
     exec { "WebConfiguration-create-${site_name}-${directory}" :
       command   => "Import-Module WebAdministration; New-Item 'IIS:\Sites\\${site_name}\\${directory}' -type VirtualDirectory -PhysicalPath ${path} ",
